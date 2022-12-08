@@ -1,4 +1,4 @@
-# GConfigManager
+# GConfigManager | 4.26 | 4.27 | 5.0 | 5.1 |
 
 Plugin to toggle between DX11, DX12 and VULKAN, Antialiasing(MSAA, FXAA, TSR, TAA), enable/disable Lumen in game.
 
