@@ -10,12 +10,57 @@ UGConfigManagerBPLibrary::UGConfigManagerBPLibrary(const FObjectInitializer& Obj
 
 }
 
-float UGConfigManagerBPLibrary::GConfigManagerSampleFunction(float Param)
+void UGConfigManagerBPLibrary::SetGraphicsRHI(EGraphicsRHI GraphicsRHI)
 {
-	return -1;
+	FString TargetPlataform = UGameplayStatics::GetPlatformName();
+	FString DefaultGraphicsRHI;
+	FString RHI_DX11(TEXT("DefaultGraphicsRHI_DX11"));
+	FString RHI_DX12(TEXT("DefaultGraphicsRHI_DX12"));
+	FString RHI_VULKAN(TEXT("DefaultGraphicsRHI_Vulkan"));
+
+	if (TargetPlataform == "Windows")
+	{
+		GConfig->GetString(TEXT("/Script/WindowsTargetPlatform.WindowsTargetSettings"), TEXT("DefaultGraphicsRHI"), DefaultGraphicsRHI, GEngineIni);
+		switch (GraphicsRHI)
+		{
+		case EGraphicsRHI::RHI_DX11:
+			GConfig->SetString(TEXT("/Script/WindowsTargetPlatform.WindowsTargetSettings"), TEXT("DefaultGraphicsRHI"), *RHI_DX11, GEngineIni);
+			GConfig->Flush(true, GEngineIni);
+			return;
+
+		case EGraphicsRHI::RHI_DX12:
+			GConfig->SetString(TEXT("/Script/WindowsTargetPlatform.WindowsTargetSettings"), TEXT("DefaultGraphicsRHI"), *RHI_DX12, GEngineIni);
+			GConfig->Flush(true, GEngineIni);
+			return;
+
+		case EGraphicsRHI::RHI_VULKAN:
+			GConfig->SetString(TEXT("/Script/WindowsTargetPlatform.WindowsTargetSettings"), TEXT("DefaultGraphicsRHI"), *RHI_VULKAN, GEngineIni);
+			GConfig->Flush(true, GEngineIni);
+			return;
+		}
+
+	}
 }
 
-void UGConfigManagerBPLibrary::SetGIMethod(EGlobalIllumination GIMethod, bool SaveConfig)
+EGraphicsRHI UGConfigManagerBPLibrary::GetCurrentGraphicsRHI()
+{
+	FString TargetPlataform = UGameplayStatics::GetPlatformName();
+	FString DefaultGraphicsRHI;
+
+	GConfig->GetString(TEXT("/Script/WindowsTargetPlatform.WindowsTargetSettings"), TEXT("DefaultGraphicsRHI"), DefaultGraphicsRHI, GEngineIni);
+
+	if (DefaultGraphicsRHI == "DefaultGraphicsRHI_DX11")
+	{
+		return EGraphicsRHI::RHI_DX11;
+	}
+	else if (DefaultGraphicsRHI == "DefaultGraphicsRHI_DX12")
+	{
+		return EGraphicsRHI::RHI_DX12;
+	}
+	return EGraphicsRHI::RHI_VULKAN;
+}
+
+void UGConfigManagerBPLibrary::SetGIMethod(EGlobalIllumination GIMethod)
 {
 	UWorld* world = GEngine->GameViewport->GetWorld();
 	FString Index(TEXT("0"));
@@ -42,22 +87,36 @@ void UGConfigManagerBPLibrary::SetGIMethod(EGlobalIllumination GIMethod, bool Sa
 		GEngine->Exec(world->GetWorld(), TEXT("r.DynamicGlobalIlluminationMethod 3"));
 	}
 
-	if (SaveConfig)
-	{
-		GConfig->GetString(TEXT("Script/Engine.RendererSettings"), TEXT("r.DynamicGlobalIlluminationMethod"), DefaultGlobalIllumination, GEngineIni);
-
-		GConfig->SetString(TEXT("Script/Engine.RendererSettings"), TEXT("r.DynamicGlobalIlluminationMethod"), *Index, GEngineIni);
-		GConfig->Flush(true, GEngineIni);
-	}
-
 	if (GIMethod != EGlobalIllumination::GI_LUMEN || GetReflectionMethod() == EReflection::RF_LUMEN)
 	{
-		SetReflectionMethod(EReflection::RF_SCREENSPACE, true);
+		SetReflectionMethod(EReflection::RF_SCREENSPACE);
 	}
 	
 }
 
-void UGConfigManagerBPLibrary::SetReflectionMethod(EReflection ReflectionMethod, bool SaveConfig)
+EGlobalIllumination UGConfigManagerBPLibrary::GetGIMethod()
+{
+	int Index = UKismetSystemLibrary::GetConsoleVariableIntValue("r.DynamicGlobalIlluminationMethod");
+
+	switch (Index)
+	{
+	case 0:
+		return EGlobalIllumination::GI_NONE;
+
+	case 1:
+		return EGlobalIllumination::GI_LUMEN;
+
+	case 2:
+		return EGlobalIllumination::GI_SCREENSPACE;
+
+	case 3:
+		return EGlobalIllumination::GI_RT;
+	}
+
+	return EGlobalIllumination::GI_NONE;
+}
+
+void UGConfigManagerBPLibrary::SetReflectionMethod(EReflection ReflectionMethod)
 {
 	UWorld* world = GEngine->GameViewport->GetWorld();
 	FString Index(TEXT("0"));
@@ -93,17 +152,31 @@ void UGConfigManagerBPLibrary::SetReflectionMethod(EReflection ReflectionMethod,
 		GEngine->Exec(world->GetWorld(), TEXT("r.ReflectionMethod 3"));
 	}
 	
-	if (SaveConfig)
-	{
-		GConfig->GetString(TEXT("Script/Engine.RendererSettings"), TEXT("r.ReflectionMethod"), DefaultReflectionMethod, GEngineIni);
-
-		GConfig->SetString(TEXT("Script/Engine.RendererSettings"), TEXT("r.ReflectionMethod"), *Index, GEngineIni);
-		GConfig->Flush(true, GEngineIni);
-	}
-	
 }
 
-void UGConfigManagerBPLibrary::SetShadowMethod(EShadowMap ShadowMapMethod, bool SaveConfig)
+EReflection UGConfigManagerBPLibrary::GetReflectionMethod()
+{
+	int Index = UKismetSystemLibrary::GetConsoleVariableIntValue("r.ReflectionMethod");
+
+	switch (Index)
+	{
+	case 0:
+		return EReflection::RF_NONE;
+
+	case 1:
+		return EReflection::RF_LUMEN;
+
+	case 2:
+		return EReflection::RF_SCREENSPACE;
+
+	case 3:
+		return EReflection::RF_RT;
+	}
+
+	return EReflection::RF_NONE;
+}
+
+void UGConfigManagerBPLibrary::SetShadowMethod(EShadowMap ShadowMapMethod)
 {
 	UWorld* world = GEngine->GameViewport->GetWorld();
 	FString Index(TEXT("0"));
@@ -120,17 +193,25 @@ void UGConfigManagerBPLibrary::SetShadowMethod(EShadowMap ShadowMapMethod, bool 
 		GEngine->Exec(world->GetWorld(), TEXT("r.Shadow.Virtual.Enable 1"));
 	}
 	
-	if (SaveConfig)
-	{
-		GConfig->GetString(TEXT("Script/Engine.RendererSettings"), TEXT("r.Shadow.Virtual.Enable"), DefaultShadowMapMethod, GEngineIni);
-
-		GConfig->SetString(TEXT("Script/Engine.RendererSettings"), TEXT("r.Shadow.Virtual.Enable"), *Index, GEngineIni);
-		GConfig->Flush(true, GEngineIni);
-	}
-	
 }
 
-void UGConfigManagerBPLibrary::SetAAMethod(EAntialiasing AntialiasingMethod, bool SaveConfig)
+EShadowMap UGConfigManagerBPLibrary::GetShadowMethod()
+{
+	int Index = UKismetSystemLibrary::GetConsoleVariableIntValue("r.Shadow.Virtual.Enable");
+
+	switch (Index)
+	{
+	case 0:
+		return EShadowMap::SD_SHADOWMAP;
+
+	case 1:
+		return EShadowMap::SD_VIRTUALSHADOWMAP;
+	}
+
+	return EShadowMap::SD_SHADOWMAP;
+}
+
+void UGConfigManagerBPLibrary::SetAAMethod(EAntialiasing AntialiasingMethod)
 {
 	UWorld* world = GEngine->GameViewport->GetWorld();
 	FString Index(TEXT("0"));
@@ -162,17 +243,34 @@ void UGConfigManagerBPLibrary::SetAAMethod(EAntialiasing AntialiasingMethod, boo
 		GEngine->Exec(world->GetWorld(), TEXT("r.AntiAliasingMethod 4"));
 	}
 	
-	if (SaveConfig)
-	{
-		GConfig->GetString(TEXT("Script/Engine.RendererSettings"), TEXT("r.AntiAliasingMethod"), DefaultAAMethod, GEngineIni);
-
-		GConfig->SetString(TEXT("Script/Engine.RendererSettings"), TEXT("r.AntiAliasingMethod"), *Index, GEngineIni);
-		GConfig->Flush(true, GEngineIni);
-	}
-	
 }
 
-void UGConfigManagerBPLibrary::SetMSAAQuality(EMSAAQuality MSAAQuality, bool SaveConfig)
+EAntialiasing UGConfigManagerBPLibrary::GetAAMethod()
+{
+	int Index = UKismetSystemLibrary::GetConsoleVariableIntValue("r.AntiAliasingMethod");
+
+	switch (Index)
+	{
+	case 0:
+		return EAntialiasing::AA_NONE;
+
+	case 1:
+		return EAntialiasing::AA_FXAA;
+
+	case 2:
+		return EAntialiasing::AA_TAA;
+
+	case 3:
+		return EAntialiasing::AA_MSAA;
+
+	case 4:
+		return EAntialiasing::AA_TSR;
+	}
+
+	return EAntialiasing::AA_NONE;
+}
+
+void UGConfigManagerBPLibrary::SetMSAAQuality(EMSAAQuality MSAAQuality)
 {
 	UWorld* world = GEngine->GameViewport->GetWorld();
 	FString Index(TEXT("0"));
@@ -198,149 +296,7 @@ void UGConfigManagerBPLibrary::SetMSAAQuality(EMSAAQuality MSAAQuality, bool Sav
 		Index = TEXT("8");
 		GEngine->Exec(world->GetWorld(), TEXT("r.MSAACount 8"));
 	}
-	
-	if (SaveConfig)
-	{
-		GConfig->GetString(TEXT("Script/Engine.RendererSettings"), TEXT("r.MSAACount"), DefaultMSAAQuality, GEngineIni);
 
-		GConfig->SetString(TEXT("Script/Engine.RendererSettings"), TEXT("r.MSAACount"), *Index, GEngineIni);
-		GConfig->Flush(true, GEngineIni);
-	}
-}
-
-void UGConfigManagerBPLibrary::SetGraphicsRHI(EGraphicsRHI GraphicsRHI)
-{
-	FString TargetPlataform = UGameplayStatics::GetPlatformName();
-	FString DefaultGraphicsRHI;
-	FString RHI_DX11(TEXT("DefaultGraphicsRHI_DX11"));
-	FString RHI_DX12(TEXT("DefaultGraphicsRHI_DX12"));
-	FString RHI_VULKAN(TEXT("DefaultGraphicsRHI_Vulkan"));
-
-	if (TargetPlataform == "Windows")
-	{
-		GConfig->GetString(TEXT("/Script/WindowsTargetPlatform.WindowsTargetSettings"), TEXT("DefaultGraphicsRHI"), DefaultGraphicsRHI, GEngineIni);
-		switch (GraphicsRHI)
-		{
-		case EGraphicsRHI::RHI_DX11 :
-			GConfig->SetString(TEXT("/Script/WindowsTargetPlatform.WindowsTargetSettings"), TEXT("DefaultGraphicsRHI"), *RHI_DX11, GEngineIni);
-			GConfig->Flush(true, GEngineIni);
-			return;
-
-		case EGraphicsRHI::RHI_DX12 :
-			GConfig->SetString(TEXT("/Script/WindowsTargetPlatform.WindowsTargetSettings"), TEXT("DefaultGraphicsRHI"), *RHI_DX12, GEngineIni);
-			GConfig->Flush(true, GEngineIni);
-			return;
-
-		case EGraphicsRHI::RHI_VULKAN :
-			GConfig->SetString(TEXT("/Script/WindowsTargetPlatform.WindowsTargetSettings"), TEXT("DefaultGraphicsRHI"), *RHI_VULKAN, GEngineIni);
-			GConfig->Flush(true, GEngineIni);
-			return;
-		}
-		
-	}
-}
-
-EGraphicsRHI UGConfigManagerBPLibrary::GetCurrentGraphicsRHI()
-{
-	FString TargetPlataform = UGameplayStatics::GetPlatformName();
-	FString DefaultGraphicsRHI;
-
-	GConfig->GetString(TEXT("/Script/WindowsTargetPlatform.WindowsTargetSettings"), TEXT("DefaultGraphicsRHI"), DefaultGraphicsRHI, GEngineIni);
-
-	if (DefaultGraphicsRHI == "DefaultGraphicsRHI_DX11")
-	{
-		return EGraphicsRHI::RHI_DX11;
-	}
-	else if (DefaultGraphicsRHI == "DefaultGraphicsRHI_DX12")
-	{
-		return EGraphicsRHI::RHI_DX12;
-	}
-	return EGraphicsRHI::RHI_VULKAN;
-}
-
-EGlobalIllumination UGConfigManagerBPLibrary::GetGIMethod()
-{
-	int Index = UKismetSystemLibrary::GetConsoleVariableIntValue("r.DynamicGlobalIlluminationMethod");
-	
-	switch (Index)
-	{
-	case 0 :
-		return EGlobalIllumination::GI_NONE;
-
-	case 1 :
-		return EGlobalIllumination::GI_LUMEN;
-
-	case 2 :
-		return EGlobalIllumination::GI_SCREENSPACE;
-
-	case 3 :
-		return EGlobalIllumination::GI_RT;
-	}
-	
-	return EGlobalIllumination::GI_NONE;
-}
-
-EReflection UGConfigManagerBPLibrary::GetReflectionMethod()
-{
-	int Index = UKismetSystemLibrary::GetConsoleVariableIntValue("r.ReflectionMethod");
-	
-	switch (Index)
-	{
-	case 0 :
-		return EReflection::RF_NONE;
-
-	case 1 :
-		return EReflection::RF_LUMEN;
-
-	case 2 :
-		return EReflection::RF_SCREENSPACE;
-
-	case 3 :
-		return EReflection::RF_RT;
-	}
-	
-	return EReflection::RF_NONE;
-}
-
-EShadowMap UGConfigManagerBPLibrary::GetShadowMethod()
-{
-	int Index = UKismetSystemLibrary::GetConsoleVariableIntValue("r.Shadow.Virtual.Enable");
-	
-	switch (Index)
-	{
-	case 0 :
-		return EShadowMap::SD_SHADOWMAP;
-
-	case 1 :
-		return EShadowMap::SD_VIRTUALSHADOWMAP;
-	}
-	
-	return EShadowMap::SD_SHADOWMAP;
-}
-
-EAntialiasing UGConfigManagerBPLibrary::GetAAMethod()
-{
-	int Index = UKismetSystemLibrary::GetConsoleVariableIntValue("r.AntiAliasingMethod");
-	
-	switch (Index)
-	{
-	case 0 :
-		return EAntialiasing::AA_NONE;
-
-	case 1 :
-		return EAntialiasing::AA_FXAA;
-
-	case 2 :
-		return EAntialiasing::AA_TAA;
-
-	case 3 :
-		return EAntialiasing::AA_MSAA;
-		
-	case 4 :
-		return EAntialiasing::AA_TSR;
-	}
-	
-	return EAntialiasing::AA_NONE;
 }
 
 int UGConfigManagerBPLibrary::GetMSAAQuality()

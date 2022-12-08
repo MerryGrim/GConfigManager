@@ -29,43 +29,40 @@ class UGConfigManagerBPLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_UCLASS_BODY()
 
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Execute Sample function", Keywords = "GConfigManager sample test testing"), Category = "GConfigManagerTesting")
-	static float GConfigManagerSampleFunction(float Param);
+	UFUNCTION(BlueprintCallable, Category = "GConfigManager || GraphicsRHIManager")
+	static void SetGraphicsRHI(EGraphicsRHI GraphicsRHI);
 
-	UFUNCTION(BlueprintCallable, Category="GConfig Render")
-	static void SetGIMethod(EGlobalIllumination  GIMethod, bool SaveConfig);
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GConfigManager || GraphicsRHIManager")
+	static EGraphicsRHI GetCurrentGraphicsRHI();
 
-	UFUNCTION(BlueprintCallable, Category = "GConfig Render")
-	static void SetReflectionMethod(EReflection  ReflectionMethod, bool SaveConfig);
+	UFUNCTION(BlueprintCallable, Category="GConfigManager || Render")
+	static void SetGIMethod(EGlobalIllumination  GIMethod);
 
-	UFUNCTION(BlueprintCallable, Category = "GConfig Render")
-	static void SetShadowMethod(EShadowMap  ShadowMapMethod, bool SaveConfig);
-
-	UFUNCTION(BlueprintCallable, Category = "GConfig Render")
-	static void SetAAMethod(EAntialiasing AntialiasingMethod, bool SaveConfig);
-
-	UFUNCTION(BlueprintCallable, Category = "GConfig Render")
-	static void SetMSAAQuality(EMSAAQuality  MSAAQuality, bool SaveConfig);
-
-	UFUNCTION(BlueprintCallable, Category = "GraphicsRHIManager")
-    static void SetGraphicsRHI(EGraphicsRHI GraphicsRHI);
-    
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GraphicsRHIManager")
-    static EGraphicsRHI GetCurrentGraphicsRHI();
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Render Settings")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GConfigManager || Render")
 	static EGlobalIllumination GetGIMethod();
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Render Settings")
+	UFUNCTION(BlueprintCallable, Category = "GConfigManager || Render")
+	static void SetReflectionMethod(EReflection  ReflectionMethod);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GConfigManager || Render")
 	static EReflection GetReflectionMethod();
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Render Settings")
+	UFUNCTION(BlueprintCallable, Category = "GConfigManager || Render")
+	static void SetShadowMethod(EShadowMap  ShadowMapMethod);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GConfigManager || Render")
 	static EShadowMap GetShadowMethod();
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Render Settings")
+	UFUNCTION(BlueprintCallable, Category = "GConfigManager || Render")
+	static void SetAAMethod(EAntialiasing AntialiasingMethod);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GConfigManager || Render")
 	static EAntialiasing GetAAMethod();
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Render Settings")
+	UFUNCTION(BlueprintCallable, Category = "GConfigManager || Render")
+	static void SetMSAAQuality(EMSAAQuality  MSAAQuality);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GConfigManager || Render")
 	static int GetMSAAQuality();
 	
 };
