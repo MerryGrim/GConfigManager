@@ -304,3 +304,22 @@ int UGConfigManagerBPLibrary::GetMSAAQuality()
 	return UKismetSystemLibrary::GetConsoleVariableIntValue("r.MSAACount");
 }
 
+void UGConfigManagerBPLibrary::UseNanite(int Index)
+{
+	UWorld* world = GEngine->GameViewport->GetWorld();
+
+	switch (Index)
+	{
+	case 0:
+		GEngine->Exec(world->GetWorld(), TEXT("r.Nanite 0"));
+
+	case 1:
+		GEngine->Exec(world->GetWorld(), TEXT("r.Nanite 1"));
+	}
+}
+
+int UGConfigManagerBPLibrary::GetUseNanite()
+{
+	return UKismetSystemLibrary::GetConsoleVariableIntValue("r.Nanite");
+}
+

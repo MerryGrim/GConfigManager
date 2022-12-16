@@ -65,4 +65,10 @@ class UGConfigManagerBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GConfigManager || Render")
 	static int GetMSAAQuality();
 	
+	UFUNCTION(BlueprintCallable, Category = "GConfigManager || Render")
+    static void UseNanite(int Index);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "GConfigManager || Render")
+	static int GetUseNanite();
+	
 };
